@@ -1,0 +1,7 @@
+{
+  "name":"rosarium",
+  "version":"2.0.0",
+  "private":true,
+  "dependencies":{"@capacitor/core":"latest","@capacitor/android":"latest"},
+  "devDependencies":{"@capacitor/cli":"latest"}
+}
