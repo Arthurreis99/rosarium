@@ -1,0 +1,101 @@
+name: Android · Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-and-build:
+    name: Verificar e compilar
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Baixar o repositório
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - name: Instalar dependências reproduzíveis
+        run: npm ci
+      - name: Verificar o projeto web
+        run: npm run check
+      - name: Preparar o projeto Android
+        run: npm run android:prepare
+      - name: Compilar APK de teste
+        working-directory: android
+        run: ./gradlew --no-daemon --stacktrace assembleDebug
+      - name: Nomear o APK
+        id: package
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          SHORT_SHA=${GITHUB_SHA::7}
+          APK_NAME="Rosarium-v${VERSION}-${SHORT_SHA}-debug.apk"
+          mkdir -p dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk "dist/${APK_NAME}"
+          echo "apk_name=${APK_NAME}" >> "$GITHUB_OUTPUT"
+      - name: Publicar APK nos artefatos
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.apk_name }}
+          path: dist/${{ steps.package.outputs.apk_name }}
+          if-no-files-found: error
+          retention-days: 30
+      - name: Resumo da compilação
+        shell: bash
+        run: |
+          echo "## Rosarium compilado" >> "$GITHUB_STEP_SUMMARY"
+          echo "APK: **${{ steps.package.outputs.apk_name }}**" >> "$GITHUB_STEP_SUMMARY"
+          echo "Abra a execução e baixe o arquivo na seção **Artifacts**." >> "$GITHUB_STEP_SUMMARY"
+*** Add File: /workspace/scratch/af496810c585/rosarium/docs/BUILD.md
+# Compilação do Rosarium
+
+## Fluxo recomendado pelo GitHub
+
+Qualquer envio para a branch `main` inicia o workflow **Android · Build APK**. Ele:
+
+1. instala exatamente as versões registradas no `package-lock.json`;
+2. copia as fontes locais e gera os ícones;
+3. valida a estrutura e a ausência dos Mistérios Luminosos;
+4. cria a plataforma Android em ambiente limpo;
+5. sincroniza o conteúdo de `www/` com o Capacitor;
+6. compila e publica um APK nomeado com versão e commit.
+
+Também é possível iniciar a compilação manualmente em **Actions → Android · Build APK → Run workflow**.
+
+## Desenvolvimento local
+
+```bash
+npm ci
+npm run check
+npm run android:prepare
+cd android
+./gradlew assembleDebug
+```
+
+Depois da primeira preparação, use `npm run android:sync` para sincronizar alterações. A pasta `android/` é gerada e ignorada pelo Git: o resultado permanece reproduzível porque Capacitor, Node e dependências estão fixados.
+
+## Publicação na Play Store
+
+O APK produzido automaticamente é de teste. Uma versão pública deve usar um Android App Bundle (`.aab`) assinado por uma chave privada mantida fora do repositório. Nunca envie arquivos `.jks`, senhas ou chaves para o GitHub.

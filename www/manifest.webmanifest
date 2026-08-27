@@ -1,10 +1,24 @@
 {
-  "name":"Rosarium — Santo Terço em Latim",
-  "short_name":"Rosarium",
-  "start_url":"./index.html",
-  "display":"standalone",
-  "background_color":"#0a0906",
-  "theme_color":"#0a0906",
-  "description":"Santo Terço em latim eclesiástico, com mistérios, traduções, progresso e uso offline.",
-  "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]
+  "id": "./",
+  "name": "Rosarium — Santo Rosário Tradicional",
+  "short_name": "Rosarium",
+  "description": "Santo Terço e Santo Rosário tradicional em português e latim, com orações, mistérios e uso offline.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#090806",
+  "theme_color": "#090806",
+  "categories": ["lifestyle", "books"],
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Santo Rosário", "short_name": "Rosário", "url": "./?devotion=rosario", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Santo Terço", "short_name": "Terço", "url": "./?devotion=terco", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
 }

@@ -1,7 +1,33 @@
 {
-  "name":"rosarium",
-  "version":"2.0.0",
-  "private":true,
-  "dependencies":{"@capacitor/core":"latest","@capacitor/android":"latest"},
-  "devDependencies":{"@capacitor/cli":"latest"}
+  "name": "rosarium",
+  "version": "3.0.0",
+  "description": "Aplicativo católico tradicional para rezar o Santo Terço e o Santo Rosário em português e latim.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "assets": "node scripts/generate-assets.mjs",
+    "fonts": "node scripts/copy-fonts.mjs",
+    "prepare:web": "npm run fonts && npm run assets",
+    "android:init": "node scripts/prepare-android.mjs --init",
+    "android:sync": "node scripts/prepare-android.mjs",
+    "android:prepare": "npm run prepare:web && npm run android:init",
+    "build:apk": "npm run android:prepare && cd android && ./gradlew --no-daemon assembleDebug",
+    "verify": "node scripts/verify-project.mjs",
+    "test:smoke": "node tests/app.smoke.mjs",
+    "check": "npm run prepare:web && npm run verify && npm run test:smoke"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.0",
+    "@capacitor/core": "8.5.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.0",
+    "@fontsource/cinzel": "5.3.0",
+    "@fontsource/eb-garamond": "5.3.0",
+    "jsdom": "26.1.0",
+    "sharp": "0.35.4"
+  },
+  "engines": {
+    "node": ">=22"
+  }
 }

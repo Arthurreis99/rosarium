@@ -1,1 +1,13 @@
-{"appId":"com.rosarium.app","appName":"Rosarium","webDir":"www"}
+{
+  "appId": "com.arthurmedeiros.rosarium",
+  "appName": "Rosarium",
+  "webDir": "www",
+  "backgroundColor": "#090806",
+  "android": {
+    "backgroundColor": "#090806",
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}
