@@ -6,6 +6,7 @@ import sharp from "sharp";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const source = resolve(root, "assets/brand/rosarium-logo.png");
 const black = { r: 9, g: 8, b: 6, alpha: 1 };
+const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
 
 await access(source);
 
@@ -18,6 +19,20 @@ async function icon(path, size, padding = 0) {
     .toBuffer();
 
   await sharp({ create: { width: size, height: size, channels: 4, background: black } })
+    .composite([{ input: mark, gravity: "center" }])
+    .png({ compressionLevel: 9 })
+    .toFile(path);
+}
+
+async function transparentMark(path, size, padding = 0) {
+  await mkdir(dirname(path), { recursive: true });
+  const inner = Math.round(size * (1 - padding * 2));
+  const mark = await sharp(source)
+    .resize(inner, inner, { fit: "contain", background: transparent })
+    .png()
+    .toBuffer();
+
+  await sharp({ create: { width: size, height: size, channels: 4, background: transparent } })
     .composite([{ input: mark, gravity: "center" }])
     .png({ compressionLevel: 9 })
     .toFile(path);
@@ -37,11 +52,11 @@ const webIcons = [
   ["www/assets/icons/icon-192.png", 192, 0.04],
   ["www/assets/icons/icon-512.png", 512, 0.04],
   ["www/assets/icons/icon-maskable-512.png", 512, 0.12],
-  ["www/assets/icons/apple-touch-icon.png", 180, 0.08],
-  ["www/assets/brand/rosarium-mark.png", 512, 0.03]
+  ["www/assets/icons/apple-touch-icon.png", 180, 0.08]
 ];
 
 for (const [path, size, padding] of webIcons) await icon(resolve(root, path), size, padding);
+await transparentMark(resolve(root, "www/assets/brand/rosarium-mark.png"), 512, 0.03);
 
 const androidRoot = resolve(root, "android/app/src/main/res");
 try {

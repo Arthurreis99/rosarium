@@ -1,9 +1,9 @@
-const CACHE = "rosarium-v3.0.0";
+const CACHE = "rosarium-v3.0.1";
 const APP_SHELL = [
   "./", "./index.html", "./styles/app.css", "./scripts/app.js", "./scripts/data.js", "./manifest.webmanifest",
   "./assets/brand/rosarium-mark.png", "./assets/icons/icon-192.png", "./assets/icons/icon-512.png",
-  "./assets/fonts/cinzel-400.woff2", "./assets/fonts/cinzel-600.woff2", "./assets/fonts/eb-garamond-400.woff2",
-  "./assets/fonts/eb-garamond-500.woff2", "./assets/fonts/eb-garamond-400-italic.woff2"
+  "./assets/fonts/eb-garamond-400.woff2", "./assets/fonts/eb-garamond-500.woff2",
+  "./assets/fonts/eb-garamond-400-italic.woff2"
 ];
 
 self.addEventListener("install", (event) => {

@@ -4,6 +4,14 @@ Aplicativo católico tradicional para rezar o **Santo Terço** e o **Santo Rosá
 
 > *Ad Iesum per Mariam — Salve Maria e Viva Cristo Rei.*
 
+## Ver o aplicativo no navegador
+
+A versão mais recente da interface é publicada automaticamente em:
+
+**https://arthurreis99.github.io/rosarium/**
+
+Ela usa exatamente os arquivos web que entram no APK, então serve para conferir a navegação, os textos e a aparência antes de compilar o Android.
+
 ## Recursos
 
 - Santo Terço com os Mistérios Gozosos, Dolorosos e Gloriosos, sem os Mistérios Luminosos.
@@ -13,7 +21,7 @@ Aplicativo católico tradicional para rezar o **Santo Terço** e o **Santo Rosá
 - Progresso salvo no dispositivo, navegação por mistérios e por Ave-Marias.
 - Tamanho de texto, modo foco, temas e opção de manter a tela ligada.
 - Fontes e recursos empacotados para funcionamento integralmente offline.
-- Ícones PWA e Android gerados automaticamente a partir da arte-mestra.
+- Marca interna com transparência real e ícones PWA/Android gerados automaticamente a partir da arte-mestra.
 
 ## Baixar o APK
 
