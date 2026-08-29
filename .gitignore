@@ -1,8 +1,7 @@
 node_modules/
-android/
+/android/
 dist/
 *.apk
 *.aab
 .DS_Store
 npm-debug.log*
-

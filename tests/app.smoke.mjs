@@ -18,6 +18,7 @@ await import(`${pathToFileURL(resolve(root, "www/scripts/app.js")).href}?smoke=$
 
 const $ = (selector, parent = document) => parent.querySelector(selector);
 const visible = (selector) => !$(selector).classList.contains("hidden");
+const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 assert.equal(visible("#screen-home"), true, "A tela inicial deve abrir.");
 assert.equal(document.querySelectorAll("[data-open-settings]").length >= 3, true, "Configurações devem estar acessíveis nas telas principais.");
@@ -53,4 +54,33 @@ $("#prayer-search").value = "Miguel";
 $("#prayer-search").dispatchEvent(new window.Event("input", { bubbles: true }));
 assert.equal(document.querySelectorAll(".library-prayer").length, 1, "A busca da biblioteca deve filtrar as orações.");
 
-console.log("Teste de interface concluído: Terço, Rosário, idioma, navegação e biblioteca funcionando.");
+$("#screen-library [data-home]").click();
+$("#btn-agenda").click();
+await settle();
+assert.equal(visible("#screen-agenda"), true, "A Agenda deve abrir a partir do menu principal.");
+assert.equal(visible("#agenda-tasks-panel"), true, "A aba de tarefas deve abrir por padrão.");
+
+$("#btn-new-task").click();
+assert.equal(visible("#task-dialog"), true, "O editor interno de tarefas deve abrir.");
+const now = new Date();
+const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+$("#task-title").value = "Rezar o Santo Terço";
+$("#task-date").value = today;
+$("#task-time").value = "18:00";
+$("#task-prayer-target").value = "terco";
+$("#task-form").dispatchEvent(new window.Event("submit", { bubbles: true, cancelable: true }));
+await settle();
+await settle();
+assert.equal(document.querySelectorAll("#agenda-task-list .agenda-task-card").length, 1, "Uma tarefa criada deve aparecer na lista do dia.");
+
+$("#agenda-tabs [data-tab=calendar]").click();
+assert.equal(visible("#agenda-calendar-panel"), true, "O calendário deve ser acessível pela aba interna.");
+assert.equal(document.querySelectorAll("#calendar-grid .calendar-day").length >= 28, true, "O calendário deve renderizar todos os dias do mês.");
+
+$("#agenda-tabs [data-tab=tasks]").click();
+$("#agenda-task-list .task-check").click();
+await settle();
+await settle();
+assert.equal($("#agenda-task-list .agenda-task-card").dataset.completed, "true", "A conclusão deve ser registrada por ocorrência.");
+
+console.log("Teste de interface concluído: Terço, Rosário, idioma, biblioteca, Agenda e calendário funcionando.");

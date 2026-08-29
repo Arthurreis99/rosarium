@@ -14,14 +14,6 @@
   <link rel="icon" href="assets/icons/icon-192.png">
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
   <link rel="stylesheet" href="styles/app.css">
-  <style>
-    .donation-button{width:max-content;min-height:38px;margin:14px auto 0;padding:7px 14px;font-size:.62rem;text-decoration:none}
-    .about-contact{text-align:center;color:var(--ivory-soft)}
-    .about-contact a{color:var(--gold-bright);text-decoration:none;border-bottom:1px solid var(--line-strong)}
-    .about-dedication{margin:18px 0;padding:15px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--ivory-soft);font-style:italic}
-    .about-donation{margin-bottom:18px}
-    .home-footer{padding-bottom:calc(var(--safe-bottom) + 24px)}
-  </style>
   <title>Rosarium — Santo Rosário Tradicional</title>
 </head>
 <body>
@@ -73,12 +65,83 @@
           </span>
           <span class="chevron" aria-hidden="true">›</span>
         </button>
+        <button id="btn-agenda" class="devotion-card" type="button">
+          <span class="devotion-icon" aria-hidden="true">◫</span>
+          <span class="devotion-copy">
+            <strong>Agenda</strong>
+            <small>Tarefas, lembretes e calendário de oração</small>
+          </span>
+          <span class="chevron" aria-hidden="true">›</span>
+        </button>
       </div>
 
       <a class="button button-secondary donation-button" href="mailto:rosario.snap777@passinbox.com?subject=Doa%C3%A7%C3%A3o%20ao%20Rosarium">Fazer uma doação</a>
       <button id="btn-about-home" class="text-button" type="button">Sobre o Rosarium</button>
     </main>
     <footer class="home-footer">Salve Maria · Viva Cristo Rei</footer>
+  </section>
+
+  <section id="screen-agenda" class="screen hidden" aria-labelledby="agenda-title">
+    <header class="topbar sticky">
+      <button class="icon-button" data-home type="button" aria-label="Voltar ao início">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v10h-6v-6H9v6H3V11Z"/></svg>
+      </button>
+      <p class="topbar-title">Agenda</p>
+      <button class="icon-button" data-open-settings type="button" aria-label="Abrir configurações">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2Zm8.2 3.6-.1-1.2 1.7-1.4-2-3.4-2.1.8a8.5 8.5 0 0 0-2-1.2L15.4 3h-4l-.4 2.6a8.5 8.5 0 0 0-2 1.2L6.8 6l-2 3.4 1.8 1.4-.1 1.2.1 1.2-1.8 1.4 2 3.4 2.2-.8a8.5 8.5 0 0 0 2 1.2l.4 2.6h4l.4-2.6a8.5 8.5 0 0 0 2-1.2l2.1.8 2-3.4-1.8-1.4.1-1.2Z"/></svg>
+      </button>
+    </header>
+    <main class="page-content agenda-content">
+      <p class="eyebrow">Ordo et Memoria</p>
+      <h1 id="agenda-title" class="page-title">Agenda de oração</h1>
+      <p class="page-intro">Reserve tempos para Deus, acompanhe seus compromissos e encontre cada intenção no dia certo.</p>
+
+      <section class="agenda-summary" aria-label="Resumo de hoje">
+        <div class="agenda-summary-copy">
+          <span>Hoje</span>
+          <strong id="agenda-summary-date"></strong>
+        </div>
+        <div class="agenda-summary-count"><strong id="agenda-summary-pending">0</strong><span>Pendentes</span></div>
+        <div class="agenda-summary-count"><strong id="agenda-summary-completed">0</strong><span>Concluídas</span></div>
+      </section>
+
+      <nav id="agenda-tabs" class="agenda-tabs" aria-label="Visualização da Agenda">
+        <button type="button" data-tab="tasks" role="tab" aria-selected="true">Tarefas</button>
+        <button type="button" data-tab="calendar" role="tab" aria-selected="false">Calendário</button>
+      </nav>
+
+      <section id="agenda-tasks-panel" class="agenda-panel" role="tabpanel">
+        <div class="agenda-section-header">
+          <div><p class="section-kicker">Compromissos</p><h2 id="agenda-list-title">Tarefas de hoje</h2></div>
+          <button id="btn-new-task" class="button button-primary button-compact" type="button"><span aria-hidden="true">＋</span> Nova</button>
+        </div>
+        <div id="agenda-filters" class="agenda-filters" aria-label="Filtrar tarefas">
+          <button type="button" data-filter="today" aria-pressed="true">Hoje</button>
+          <button type="button" data-filter="upcoming" aria-pressed="false">Próximas</button>
+          <button type="button" data-filter="recurring" aria-pressed="false">Recorrentes</button>
+          <button type="button" data-filter="completed" aria-pressed="false">Concluídas</button>
+        </div>
+        <div id="agenda-task-list" class="agenda-task-list"></div>
+      </section>
+
+      <section id="agenda-calendar-panel" class="agenda-panel hidden" role="tabpanel">
+        <div class="calendar-header">
+          <button id="btn-calendar-prev" class="icon-button" type="button" aria-label="Mês anterior">‹</button>
+          <div><p class="section-kicker">Calendário</p><h2 id="calendar-month-label"></h2></div>
+          <button id="btn-calendar-next" class="icon-button" type="button" aria-label="Próximo mês">›</button>
+        </div>
+        <button id="btn-calendar-today" class="calendar-today-button" type="button">Voltar para hoje</button>
+        <div class="calendar-weekdays" aria-hidden="true"><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span></div>
+        <div id="calendar-grid" class="calendar-grid" role="grid" aria-label="Dias do mês"></div>
+        <section class="calendar-selected-day">
+          <div class="agenda-section-header">
+            <div><p class="section-kicker">Dia selecionado</p><h2 id="calendar-selected-title"></h2></div>
+            <button id="btn-new-task-day" class="button button-secondary button-compact" type="button">Adicionar</button>
+          </div>
+          <div id="calendar-day-list" class="agenda-task-list"></div>
+        </section>
+      </section>
+    </main>
   </section>
 
   <section id="screen-select" class="screen hidden" aria-labelledby="select-title">
@@ -226,7 +289,94 @@
           <button type="button" data-value="classic">Clássico</button><button type="button" data-value="paper">Pergaminho</button><button type="button" data-value="black">Profundo</button>
         </div>
       </div>
+      <div class="settings-group">
+        <h3>Dados e segurança</h3>
+        <p class="settings-help">O banco permanece ao reiniciar e atualizar o aplicativo. Exporte um arquivo antes de desinstalar ou trocar de aparelho.</p>
+        <p id="agenda-native-status" class="settings-status">Verificando integração Android…</p>
+        <div class="settings-button-grid">
+          <button id="btn-export-backup" class="button button-secondary" type="button">Exportar JSON</button>
+          <button id="btn-import-backup" class="button button-secondary" type="button">Importar JSON</button>
+        </div>
+        <p id="agenda-backup-status" class="settings-status" aria-live="polite"></p>
+        <button id="btn-clear-agenda" class="button button-ghost button-full danger-button" type="button">Apagar tarefas e histórico</button>
+      </div>
       <button id="btn-reset-settings" class="button button-secondary button-full" type="button">Restaurar padrões</button>
+    </section>
+  </div>
+
+  <div id="task-dialog" class="dialog-layer hidden" role="presentation">
+    <section class="dialog-sheet dialog-sheet-tall" role="dialog" aria-modal="true" aria-labelledby="task-dialog-title">
+      <header class="dialog-header">
+        <div><p class="dialog-kicker">Agenda de oração</p><h2 id="task-dialog-title">Novo compromisso</h2></div>
+        <button class="icon-button" id="btn-close-task-dialog" type="button" aria-label="Fechar compromisso">×</button>
+      </header>
+      <form id="task-form" class="task-form">
+        <fieldset class="form-fieldset">
+          <legend>Natureza</legend>
+          <div id="task-kind-control" class="segmented" role="radiogroup" aria-label="Natureza do compromisso">
+            <button type="button" data-value="task" aria-checked="true">Tarefa</button>
+            <button type="button" data-value="reminder" aria-checked="false">Lembrete</button>
+          </div>
+        </fieldset>
+        <label class="form-field"><span>Título</span><input id="task-title" type="text" maxlength="100" required placeholder="Ex.: Rezar o Santo Terço"></label>
+        <label class="form-field"><span>Categoria</span><select id="task-type">
+          <option value="prayer">Oração</option><option value="chaplet">Santo Terço</option><option value="rosary">Santo Rosário</option>
+          <option value="mass">Santa Missa</option><option value="novena">Novena</option><option value="fasting">Jejum</option>
+          <option value="reading">Leitura espiritual</option><option value="sacrament">Sacramento</option><option value="intention">Intenção</option><option value="other">Outro</option>
+        </select></label>
+        <div class="form-grid-two">
+          <label class="form-field"><span>Data inicial</span><input id="task-date" type="date" required></label>
+          <label class="form-field"><span>Horário</span><input id="task-time" type="time"></label>
+        </div>
+        <label class="form-field"><span>Repetição</span><select id="task-recurrence">
+          <option value="none">Não repetir</option><option value="daily">Todos os dias</option><option value="weekly">Dias da semana</option>
+          <option value="monthly">Todos os meses</option><option value="yearly">Todos os anos</option>
+        </select></label>
+        <fieldset id="task-weekdays-field" class="form-fieldset hidden">
+          <legend>Dias da semana</legend>
+          <div id="task-weekdays" class="weekday-picker">
+            <button type="button" data-day="0" aria-pressed="false" aria-label="Domingo">D</button>
+            <button type="button" data-day="1" aria-pressed="false" aria-label="Segunda-feira">S</button>
+            <button type="button" data-day="2" aria-pressed="false" aria-label="Terça-feira">T</button>
+            <button type="button" data-day="3" aria-pressed="false" aria-label="Quarta-feira">Q</button>
+            <button type="button" data-day="4" aria-pressed="false" aria-label="Quinta-feira">Q</button>
+            <button type="button" data-day="5" aria-pressed="false" aria-label="Sexta-feira">S</button>
+            <button type="button" data-day="6" aria-pressed="false" aria-label="Sábado">S</button>
+          </div>
+        </fieldset>
+        <label class="form-field"><span>Encerrar repetição (opcional)</span><input id="task-end-date" type="date"></label>
+        <label class="setting-row form-switch-row">
+          <span class="setting-copy"><strong>Notificação</strong><small id="task-notification-help">O Android avisará no horário escolhido</small></span>
+          <input id="task-notification" class="switch-input" type="checkbox"><span class="switch" aria-hidden="true"></span>
+        </label>
+        <label class="form-field"><span>Antecedência</span><select id="task-reminder">
+          <option value="0">No horário</option><option value="5">5 minutos antes</option><option value="10">10 minutos antes</option>
+          <option value="15">15 minutos antes</option><option value="30">30 minutos antes</option><option value="60">1 hora antes</option>
+        </select></label>
+        <label class="form-field"><span>Abrir no Rosarium</span><select id="task-prayer-target">
+          <option value="none">Nenhuma tela específica</option><option value="terco">Santo Terço</option><option value="rosario">Santo Rosário</option><option value="library">Biblioteca de orações</option>
+        </select></label>
+        <label class="form-field"><span>Intenção ou observação</span><textarea id="task-notes" rows="3" maxlength="500" placeholder="Opcional"></textarea></label>
+        <div class="task-form-actions">
+          <button id="btn-delete-task" class="button button-ghost danger-button hidden" type="button">Excluir</button>
+          <button class="button button-primary" type="submit">Salvar compromisso</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div id="backup-import-dialog" class="dialog-layer hidden" role="presentation">
+    <section class="dialog-sheet dialog-sheet-small" role="dialog" aria-modal="true" aria-labelledby="backup-import-title">
+      <header class="dialog-header">
+        <div><p class="dialog-kicker">Dados e segurança</p><h2 id="backup-import-title">Importar backup</h2></div>
+        <button class="icon-button" id="btn-close-backup-import" type="button" aria-label="Cancelar importação">×</button>
+      </header>
+      <p id="backup-file-name" class="backup-file-name"></p>
+      <p id="backup-summary" class="confirm-message"></p>
+      <div class="backup-mode-list">
+        <button id="btn-import-merge" class="button button-secondary button-full" type="button">Combinar com os dados atuais</button>
+        <button id="btn-import-replace" class="button button-ghost button-full danger-button" type="button">Substituir todos os dados</button>
+      </div>
     </section>
   </div>
 
@@ -267,6 +417,8 @@
       <p class="about-closing">Salve Maria e Viva Cristo Rei!</p>
     </section>
   </div>
+
+  <div id="agenda-toast" class="agenda-toast hidden" role="status" aria-live="polite"></div>
 
   <noscript>O Rosarium precisa do JavaScript ativado para organizar as orações e o progresso.</noscript>
   <script type="module" src="scripts/app.js"></script>

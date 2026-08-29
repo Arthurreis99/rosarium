@@ -19,6 +19,7 @@
   ],
   "shortcuts": [
     { "name": "Santo Rosário", "short_name": "Rosário", "url": "./?devotion=rosario", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Santo Terço", "short_name": "Terço", "url": "./?devotion=terco", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Santo Terço", "short_name": "Terço", "url": "./?devotion=terco", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Agenda de oração", "short_name": "Agenda", "url": "./?screen=agenda", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }

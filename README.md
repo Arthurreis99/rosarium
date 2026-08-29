@@ -18,6 +18,10 @@ Ela usa exatamente os arquivos web que entram no APK, então serve para conferir
 - Santo Rosário completo com quinze mistérios, Salve-Rainha, Ladainha Lauretana e oração final.
 - Português ou latim como idioma principal, sempre com tradução no idioma complementar.
 - Biblioteca de orações bilíngue e pesquisável.
+- Agenda de oração com tarefas, lembretes, recorrências e calendário mensal.
+- Notificações Android programadas, restauradas após reiniciar ou alterar o horário do aparelho.
+- Abertura da tarefa pela notificação e ação para marcá-la como rezada.
+- Banco local para tarefas e histórico, com exportação e importação de backup JSON.
 - Progresso salvo no dispositivo, navegação por mistérios e por Ave-Marias.
 - Tamanho de texto, modo foco, temas e opção de manter a tela ligada.
 - Fontes e recursos empacotados para funcionamento integralmente offline.
@@ -48,6 +52,7 @@ O APK será criado em `android/app/build/outputs/apk/debug/app-debug.apk`. Consu
 ```text
 assets/brand/       arte-mestra da identidade visual
 scripts/            automação de fontes, ícones, validação e Android
+native/android/     plugin Kotlin reproduzível para alarmes, notificações e backups
 www/                aplicação web distribuída no PWA e no APK
   assets/           fontes, marca e ícones gerados
   scripts/          dados litúrgicos e lógica do aplicativo

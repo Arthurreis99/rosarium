@@ -1,6 +1,6 @@
 {
   "name": "rosarium",
-  "version": "3.0.1",
+  "version": "4.0.0",
   "description": "Aplicativo católico tradicional para rezar o Santo Terço e o Santo Rosário em português e latim.",
   "private": true,
   "type": "module",
@@ -14,7 +14,8 @@
     "build:apk": "npm run android:prepare && cd android && ./gradlew --no-daemon assembleDebug",
     "verify": "node scripts/verify-project.mjs",
     "test:smoke": "node tests/app.smoke.mjs",
-    "check": "npm run prepare:web && npm run verify && npm run test:smoke"
+    "test:agenda": "node tests/agenda-store.mjs",
+    "check": "npm run prepare:web && npm run verify && npm run test:agenda && npm run test:smoke"
   },
   "dependencies": {
     "@capacitor/android": "8.5.0",

@@ -1,4 +1,5 @@
 import { PRAYERS, MYSTERY_SETS, SET_ORDER, LIBRARY_ORDER, suggestedMystery } from "./data.js";
+import { createAgendaController } from "./agenda.js";
 
 const STORAGE = {
   progress: "rosarium.progress.v3",
@@ -14,11 +15,13 @@ const DEFAULT_PREFERENCES = {
   keepAwake: false
 };
 
-const state = { mode: null, setKey: null, sequence: [], index: 0 };
+const state = { mode: null, setKey: null, sequence: [], index: 0, agendaContext: null };
 let preferences = loadPreferences();
 let wakeLock = null;
 let lastFocusedElement = null;
 let confirmCallback = null;
+let agendaController = null;
+let pendingAgendaContext = null;
 
 const $ = (selector, parent = document) => parent.querySelector(selector);
 const $$ = (selector, parent = document) => [...parent.querySelectorAll(selector)];
@@ -47,7 +50,7 @@ function applyPreferences() {
 
 function saveProgress() {
   if (!state.mode || !state.sequence.length) return;
-  localStorage.setItem(STORAGE.progress, JSON.stringify({ mode: state.mode, setKey: state.setKey, index: state.index }));
+  localStorage.setItem(STORAGE.progress, JSON.stringify({ mode: state.mode, setKey: state.setKey, index: state.index, agendaContext: state.agendaContext }));
   renderContinueCard();
 }
 
@@ -112,7 +115,8 @@ function goHome(updateHistory = true) {
   renderContinueCard();
 }
 
-function openSelection(mode) {
+function openSelection(mode, agendaContext = null) {
+  pendingAgendaContext = agendaContext;
   const isFull = mode === "rosario";
   $("#select-topbar-title").textContent = isFull ? "Santo Rosário" : "Santo Terço";
   $("#select-eyebrow").textContent = isFull ? "Quindecim Mysteria" : "Mysteria Diei";
@@ -143,16 +147,18 @@ function renderMysteryOptions() {
     button.className = "mystery-option";
     button.dataset.suggested = String(setKey === suggestion);
     button.innerHTML = `<strong>${set.title.pt}</strong><small>${set.days}${setKey === suggestion ? " · indicados hoje" : ""}</small><div class="latin">${set.title.la}</div>`;
-    button.addEventListener("click", () => startDevotion("terco", setKey));
+    button.addEventListener("click", () => startDevotion("terco", setKey, 0, pendingAgendaContext));
     container.appendChild(button);
   }
 }
 
-function startDevotion(mode, setKey = null, index = 0) {
+function startDevotion(mode, setKey = null, index = 0, agendaContext = null) {
   state.mode = mode;
   state.setKey = mode === "terco" ? setKey : null;
   state.sequence = buildSequence(mode, setKey);
   state.index = Math.max(0, Math.min(Number(index) || 0, state.sequence.length - 1));
+  state.agendaContext = agendaContext;
+  pendingAgendaContext = null;
   showScreen("screen-pray");
   renderPrayerScreen();
   saveProgress();
@@ -160,7 +166,7 @@ function startDevotion(mode, setKey = null, index = 0) {
 
 function continueDevotion() {
   const saved = loadProgress();
-  if (saved) startDevotion(saved.mode, saved.setKey, saved.index);
+  if (saved) startDevotion(saved.mode, saved.setKey, saved.index, saved.agendaContext || null);
 }
 
 function renderContinueCard() {
@@ -272,9 +278,12 @@ function renderBeads(step) {
   }
 }
 
-function nextStep() {
+async function nextStep() {
   if (state.index >= state.sequence.length - 1) {
+    const agendaContext = state.agendaContext;
+    state.agendaContext = null;
     clearProgress();
+    if (agendaContext?.taskId && agendaController) await agendaController.completeTask(agendaContext.taskId, agendaContext.date, true);
     showConfirm("Oração concluída", "O progresso foi concluído. Deseja voltar ao início?", () => goHome());
     return;
   }
@@ -373,7 +382,7 @@ function openSettings() {
 }
 
 function syncSettingsControls() {
-  $$(".segmented").forEach((group) => {
+  $$(".segmented[data-setting]").forEach((group) => {
     const key = group.dataset.setting;
     $$('button[data-value]', group).forEach((button) => button.setAttribute("aria-checked", String(button.dataset.value === preferences[key])));
   });
@@ -434,7 +443,7 @@ function bindEvents() {
   $("#btn-santo-rosario").addEventListener("click", () => openSelection("rosario"));
   $("#btn-terco").addEventListener("click", () => openSelection("terco"));
   $("#btn-library").addEventListener("click", () => { renderLibrary(); showScreen("screen-library"); });
-  $("#btn-start-full").addEventListener("click", () => startDevotion("rosario"));
+  $("#btn-start-full").addEventListener("click", () => startDevotion("rosario", null, 0, pendingAgendaContext));
   $("#btn-continue").addEventListener("click", continueDevotion);
   $("#btn-next").addEventListener("click", nextStep);
   $("#btn-prev").addEventListener("click", previousStep);
@@ -442,7 +451,7 @@ function bindEvents() {
   $$('[data-open-settings]').forEach((button) => button.addEventListener("click", openSettings));
   $("#btn-close-settings").addEventListener("click", () => closeDialog($("#settings-dialog")));
 
-  $$(".segmented").forEach((group) => group.addEventListener("click", (event) => {
+  $$(".segmented[data-setting]").forEach((group) => group.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-value]");
     if (button) updatePreference(group.dataset.setting, button.dataset.value);
   }));
@@ -500,15 +509,51 @@ function bindEvents() {
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") syncWakeLock(); });
 }
 
-function init() {
+function getCoreBackup() {
+  return { preferences, progress: loadProgress() };
+}
+
+function restoreCoreBackup(application, mode) {
+  if (application.preferences) {
+    preferences = mode === "replace" ? { ...DEFAULT_PREFERENCES, ...application.preferences } : { ...preferences, ...application.preferences };
+    savePreferences();
+    applyPreferences();
+    syncSettingsControls();
+  }
+  if (application.progress) localStorage.setItem(STORAGE.progress, JSON.stringify(application.progress));
+  else if (mode === "replace") clearProgress();
+  renderContinueCard();
+}
+
+function startAgendaPrayer(task, occurrenceDate) {
+  const agendaContext = { taskId: task.id, date: occurrenceDate };
+  if (task.prayerTarget === "rosario") startDevotion("rosario", null, 0, agendaContext);
+  else if (task.prayerTarget === "terco") openSelection("terco", agendaContext);
+  else if (task.prayerTarget === "library") {
+    renderLibrary();
+    showScreen("screen-library");
+  }
+}
+
+async function init() {
   applyPreferences();
   bindEvents();
   renderContinueCard();
   history.replaceState({ screen: "screen-home" }, "", "");
   $(".progress-rail").classList.add("hidden");
+  agendaController = await createAgendaController({
+    showScreen,
+    openDialog,
+    closeDialog,
+    showConfirm,
+    getCoreBackup,
+    restoreCoreBackup,
+    onStartPrayer: startAgendaPrayer
+  });
   if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js").catch(() => {}));
   const shortcut = new URLSearchParams(location.search).get("devotion");
   if (shortcut === "rosario" || shortcut === "terco") openSelection(shortcut);
+  else if (new URLSearchParams(location.search).get("screen") === "agenda") await agendaController.open();
 }
 
-init();
+await init();
