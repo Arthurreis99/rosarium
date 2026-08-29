@@ -33,6 +33,45 @@ const TYPE_ICONS = {
   fasting: "◇", reading: "❧", sacrament: "✥", intention: "◌", other: "·"
 };
 
+const PICKERS = {
+  type: {
+    title: "Selecionar categoria",
+    options: Object.entries(TYPE_LABELS).map(([value, label]) => ({ value, label, icon: TYPE_ICONS[value] }))
+  },
+  recurrence: {
+    title: "Selecionar repetição",
+    options: [
+      { value: "none", label: "Não repetir", icon: "·" },
+      { value: "daily", label: "Todos os dias", icon: "D" },
+      { value: "weekly", label: "Toda semana", icon: "S" },
+      { value: "monthly", label: "Todo mês", icon: "M" },
+      { value: "yearly", label: "Todo ano", icon: "A" }
+    ]
+  },
+  reminder: {
+    title: "Selecionar antecedência",
+    options: [
+      { value: "0", label: "No horário", icon: "◷" },
+      { value: "5", label: "5 minutos antes", icon: "◷" },
+      { value: "10", label: "10 minutos antes", icon: "◷" },
+      { value: "15", label: "15 minutos antes", icon: "◷" },
+      { value: "30", label: "30 minutos antes", icon: "◷" },
+      { value: "60", label: "1 hora antes", icon: "◷" },
+      { value: "120", label: "2 horas antes", icon: "◷" },
+      { value: "1440", label: "1 dia antes", icon: "◷" }
+    ]
+  },
+  prayerTarget: {
+    title: "Selecionar destino",
+    options: [
+      { value: "none", label: "Nenhuma tela específica", icon: "·" },
+      { value: "terco", label: "Santo Terço", icon: "✦" },
+      { value: "rosario", label: "Santo Rosário", icon: "✣" },
+      { value: "library", label: "Biblioteca de orações", icon: "☩" }
+    ]
+  }
+};
+
 const WEEKDAYS = [
   { value: 0, short: "D", label: "Domingo" },
   { value: 1, short: "S", label: "Segunda-feira" },
@@ -60,6 +99,41 @@ function capitalize(value) {
 
 function timeLabel(time) {
   return time || "Sem horário";
+}
+
+function dateDisplay(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : "";
+}
+
+function parseDateDisplay(value) {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(value || "").trim());
+  if (!match) return null;
+  const [, day, month, year] = match;
+  const parsed = new Date(Number(year), Number(month) - 1, Number(day), 12, 0, 0, 0);
+  if (parsed.getFullYear() !== Number(year) || parsed.getMonth() !== Number(month) - 1 || parsed.getDate() !== Number(day)) return null;
+  return `${year}-${month}-${day}`;
+}
+
+function maskDate(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+function normalizeTime(value) {
+  const match = /^(\d{1,2}):?(\d{2})$/.exec(String(value || "").trim());
+  if (!match) return null;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (hour > 23 || minute > 59) return null;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function maskTime(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 4);
+  return digits.length <= 2 ? digits : `${digits.slice(0, 2)}:${digits.slice(2)}`;
 }
 
 function recurrenceLabel(task) {
@@ -100,6 +174,7 @@ export async function createAgendaController(options) {
   let calendarMonth = new Date();
   let editingTaskId = null;
   let pendingBackup = null;
+  let activePicker = null;
   let capabilities = { native: false, notifications: "web", filePicker: false };
 
   const completionMap = () => new Map(completions.map((item) => [item.id, item]));
@@ -123,6 +198,68 @@ export async function createAgendaController(options) {
     toast.classList.remove("hidden");
     clearTimeout(showToast.timer);
     showToast.timer = setTimeout(() => toast.classList.add("hidden"), 3600);
+  }
+
+  function setPickerValue(name, value) {
+    const picker = PICKERS[name];
+    const selected = picker?.options.find((item) => item.value === String(value)) || picker?.options[0];
+    if (!selected) return;
+    const hidden = $(`#task-${name === "prayerTarget" ? "prayer-target" : name}`);
+    const button = $(`#task-${name === "prayerTarget" ? "prayer-target" : name}-picker`);
+    hidden.value = selected.value;
+    $("span", button).textContent = selected.label;
+  }
+
+  function closeOptionPicker() {
+    if (!activePicker) return;
+    const trigger = $(`[data-task-picker="${activePicker}"]`);
+    activePicker = null;
+    trigger?.setAttribute("aria-expanded", "false");
+    const layer = $("#option-picker-dialog");
+    if (!layer.classList.contains("hidden")) options.closeDialog(layer);
+    $("#task-dialog").classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(() => trigger?.focus());
+  }
+
+  function openOptionPicker(name) {
+    const picker = PICKERS[name];
+    if (!picker) return;
+    activePicker = name;
+    const hidden = $(`#task-${name === "prayerTarget" ? "prayer-target" : name}`);
+    const trigger = $(`[data-task-picker="${name}"]`);
+    trigger.setAttribute("aria-expanded", "true");
+    $("#option-picker-title").textContent = picker.title;
+    const list = $("#option-picker-list");
+    list.innerHTML = "";
+    let selectedButton = null;
+    picker.options.forEach((item) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "option-picker-item";
+      button.setAttribute("role", "radio");
+      button.setAttribute("aria-checked", String(item.value === hidden.value));
+      const copy = document.createElement("span");
+      const icon = document.createElement("i");
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = item.icon;
+      const label = document.createElement("b");
+      label.textContent = item.label;
+      copy.append(icon, label);
+      const mark = document.createElement("i");
+      mark.setAttribute("aria-hidden", "true");
+      mark.textContent = item.value === hidden.value ? "✓" : "";
+      button.append(copy, mark);
+      button.addEventListener("click", () => {
+        setPickerValue(name, item.value);
+        closeOptionPicker();
+        updateFormDependencies();
+      });
+      list.appendChild(button);
+      if (item.value === hidden.value) selectedButton = button;
+    });
+    $("#task-dialog").classList.add("hidden");
+    options.openDialog($("#option-picker-dialog"), selectedButton || $(".option-picker-item", list));
   }
 
   async function refresh() {
@@ -329,16 +466,19 @@ export async function createAgendaController(options) {
     $("#task-dialog-title").textContent = task ? "Editar compromisso" : "Novo compromisso";
     fillKind(task?.kind || "task");
     $("#task-title").value = task?.title || "";
-    $("#task-type").value = task?.type || "prayer";
-    $("#task-date").value = task?.startDate || occurrenceDate || dateKey();
+    setPickerValue("type", task?.type || "prayer");
+    const startDate = task?.startDate || occurrenceDate || dateKey();
+    $("#task-date").value = startDate;
+    $("#task-date-display").value = dateDisplay(startDate);
     $("#task-time").value = task?.time || "18:00";
-    $("#task-recurrence").value = task?.recurrence?.type || "none";
+    setPickerValue("recurrence", task?.recurrence?.type || "none");
     $("#task-end-date").value = task?.endDate || "";
+    $("#task-end-date-display").value = dateDisplay(task?.endDate || "");
     $("#task-notification").checked = task?.notificationEnabled ?? true;
-    $("#task-reminder").value = String(task?.reminderMinutes || 0);
-    $("#task-prayer-target").value = task?.prayerTarget || "none";
+    setPickerValue("reminder", String(task?.reminderMinutes || 0));
+    setPickerValue("prayerTarget", task?.prayerTarget || "none");
     $("#task-notes").value = task?.notes || "";
-    fillWeekdays(task?.recurrence?.weekdays || [parseDateKey($("#task-date").value).getDay()]);
+    fillWeekdays(task?.recurrence?.weekdays || [parseDateKey(startDate).getDay()]);
     $("#btn-delete-task").classList.toggle("hidden", !task);
     updateFormDependencies();
     options.openDialog($("#task-dialog"), $("#task-title"));
@@ -348,8 +488,7 @@ export async function createAgendaController(options) {
     const weekly = $("#task-recurrence").value === "weekly";
     $("#task-weekdays-field").classList.toggle("hidden", !weekly);
     const notification = $("#task-notification").checked;
-    $("#task-reminder").disabled = !notification;
-    $("#task-end-date").min = $("#task-date").value;
+    $("#task-reminder-picker").disabled = !notification;
     $("#task-notification-help").textContent = capabilities.native
       ? "O Android avisará mesmo com o Rosarium fechado."
       : "Na versão web, o horário será salvo, mas a notificação exige o aplicativo Android.";
@@ -357,6 +496,29 @@ export async function createAgendaController(options) {
 
   async function saveForm(event) {
     event.preventDefault();
+    const startDate = parseDateDisplay($("#task-date-display").value);
+    if (!startDate) {
+      showToast("Informe uma data válida no formato DD/MM/AAAA.", "error");
+      $("#task-date-display").focus();
+      return;
+    }
+    const endDateText = $("#task-end-date-display").value.trim();
+    const endDate = endDateText ? parseDateDisplay(endDateText) : "";
+    if (endDateText && !endDate) {
+      showToast("Confira a data de encerramento.", "error");
+      $("#task-end-date-display").focus();
+      return;
+    }
+    const timeText = $("#task-time").value.trim();
+    const time = timeText ? normalizeTime(timeText) : "";
+    if (timeText && !time) {
+      showToast("Informe um horário válido entre 00:00 e 23:59.", "error");
+      $("#task-time").focus();
+      return;
+    }
+    $("#task-date").value = startDate;
+    $("#task-end-date").value = endDate;
+    $("#task-time").value = time;
     const task = taskFromForm();
     if (!task.title || !task.startDate) {
       showToast("Informe pelo menos o título e a data.", "error");
@@ -515,11 +677,34 @@ export async function createAgendaController(options) {
     $("#btn-delete-task").addEventListener("click", removeEditingTask);
     $$("#task-kind-control button").forEach((button) => button.addEventListener("click", () => fillKind(button.dataset.value)));
     $$("#task-weekdays button").forEach((button) => button.addEventListener("click", () => button.setAttribute("aria-pressed", String(button.getAttribute("aria-pressed") !== "true"))));
-    $("#task-recurrence").addEventListener("change", updateFormDependencies);
+    $$('[data-task-picker]').forEach((button) => button.addEventListener("click", () => openOptionPicker(button.dataset.taskPicker)));
+    $("#btn-close-option-picker").addEventListener("click", closeOptionPicker);
+    $("#option-picker-dialog").addEventListener("click", (event) => {
+      if (event.target === $("#option-picker-dialog")) closeOptionPicker();
+    });
     $("#task-notification").addEventListener("change", updateFormDependencies);
-    $("#task-date").addEventListener("change", () => {
-      if ($$("#task-weekdays button[aria-pressed=true]").length === 1) fillWeekdays([parseDateKey($("#task-date").value).getDay()]);
-      updateFormDependencies();
+    $("#task-date-display").addEventListener("input", (event) => {
+      event.target.value = maskDate(event.target.value);
+    });
+    $("#task-date-display").addEventListener("blur", (event) => {
+      const parsed = parseDateDisplay(event.target.value);
+      if (!parsed) return;
+      $("#task-date").value = parsed;
+      if ($$("#task-weekdays button[aria-pressed=true]").length === 1) fillWeekdays([parseDateKey(parsed).getDay()]);
+    });
+    $("#task-end-date-display").addEventListener("input", (event) => {
+      event.target.value = maskDate(event.target.value);
+    });
+    $("#task-end-date-display").addEventListener("blur", (event) => {
+      const parsed = parseDateDisplay(event.target.value);
+      $("#task-end-date").value = parsed || "";
+    });
+    $("#task-time").addEventListener("input", (event) => {
+      event.target.value = maskTime(event.target.value);
+    });
+    $("#task-time").addEventListener("blur", (event) => {
+      const normalized = normalizeTime(event.target.value);
+      if (normalized) event.target.value = normalized;
     });
     $("#btn-export-backup").addEventListener("click", exportBackup);
     $("#btn-import-backup").addEventListener("click", chooseBackup);
@@ -537,6 +722,9 @@ export async function createAgendaController(options) {
     $("#btn-import-replace").addEventListener("click", () => applyBackup("replace"));
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") consumeNativeActions(true);
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && activePicker) closeOptionPicker();
     });
   }
 

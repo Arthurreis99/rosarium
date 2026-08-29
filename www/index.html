@@ -106,11 +106,11 @@
       </section>
 
       <nav id="agenda-tabs" class="agenda-tabs" aria-label="Visualização da Agenda">
-        <button type="button" data-tab="tasks" role="tab" aria-selected="true">Tarefas</button>
-        <button type="button" data-tab="calendar" role="tab" aria-selected="false">Calendário</button>
+        <button id="agenda-tab-tasks" type="button" data-tab="tasks" role="tab" aria-controls="agenda-tasks-panel" aria-selected="true">Tarefas</button>
+        <button id="agenda-tab-calendar" type="button" data-tab="calendar" role="tab" aria-controls="agenda-calendar-panel" aria-selected="false">Calendário</button>
       </nav>
 
-      <section id="agenda-tasks-panel" class="agenda-panel" role="tabpanel">
+      <section id="agenda-tasks-panel" class="agenda-panel" role="tabpanel" aria-labelledby="agenda-tab-tasks">
         <div class="agenda-section-header">
           <div><p class="section-kicker">Compromissos</p><h2 id="agenda-list-title">Tarefas de hoje</h2></div>
           <button id="btn-new-task" class="button button-primary button-compact" type="button"><span aria-hidden="true">＋</span> Nova</button>
@@ -124,7 +124,7 @@
         <div id="agenda-task-list" class="agenda-task-list"></div>
       </section>
 
-      <section id="agenda-calendar-panel" class="agenda-panel hidden" role="tabpanel">
+      <section id="agenda-calendar-panel" class="agenda-panel hidden" role="tabpanel" aria-labelledby="agenda-tab-calendar">
         <div class="calendar-header">
           <button id="btn-calendar-prev" class="icon-button" type="button" aria-label="Mês anterior">‹</button>
           <div><p class="section-kicker">Calendário</p><h2 id="calendar-month-label"></h2></div>
@@ -310,7 +310,7 @@
         <div><p class="dialog-kicker">Agenda de oração</p><h2 id="task-dialog-title">Novo compromisso</h2></div>
         <button class="icon-button" id="btn-close-task-dialog" type="button" aria-label="Fechar compromisso">×</button>
       </header>
-      <form id="task-form" class="task-form">
+      <form id="task-form" class="task-form" novalidate>
         <fieldset class="form-fieldset">
           <legend>Natureza</legend>
           <div id="task-kind-control" class="segmented" role="radiogroup" aria-label="Natureza do compromisso">
@@ -319,19 +319,12 @@
           </div>
         </fieldset>
         <label class="form-field"><span>Título</span><input id="task-title" type="text" maxlength="100" required placeholder="Ex.: Rezar o Santo Terço"></label>
-        <label class="form-field"><span>Categoria</span><select id="task-type">
-          <option value="prayer">Oração</option><option value="chaplet">Santo Terço</option><option value="rosary">Santo Rosário</option>
-          <option value="mass">Santa Missa</option><option value="novena">Novena</option><option value="fasting">Jejum</option>
-          <option value="reading">Leitura espiritual</option><option value="sacrament">Sacramento</option><option value="intention">Intenção</option><option value="other">Outro</option>
-        </select></label>
+        <div class="form-field"><span>Categoria</span><input id="task-type" type="hidden" value="prayer"><button id="task-type-picker" class="form-picker-button" data-task-picker="type" type="button" aria-haspopup="dialog" aria-controls="option-picker-dialog" aria-expanded="false"><span>Oração</span><i aria-hidden="true">⌄</i></button></div>
         <div class="form-grid-two">
-          <label class="form-field"><span>Data inicial</span><input id="task-date" type="date" required></label>
-          <label class="form-field"><span>Horário</span><input id="task-time" type="time"></label>
+          <label class="form-field"><span>Data inicial</span><input id="task-date" type="hidden"><input id="task-date-display" type="text" inputmode="numeric" maxlength="10" autocomplete="off" required placeholder="DD/MM/AAAA"></label>
+          <label class="form-field"><span>Horário</span><input id="task-time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="HH:MM"></label>
         </div>
-        <label class="form-field"><span>Repetição</span><select id="task-recurrence">
-          <option value="none">Não repetir</option><option value="daily">Todos os dias</option><option value="weekly">Dias da semana</option>
-          <option value="monthly">Todos os meses</option><option value="yearly">Todos os anos</option>
-        </select></label>
+        <div class="form-field"><span>Repetição</span><input id="task-recurrence" type="hidden" value="none"><button id="task-recurrence-picker" class="form-picker-button" data-task-picker="recurrence" type="button" aria-haspopup="dialog" aria-controls="option-picker-dialog" aria-expanded="false"><span>Não repetir</span><i aria-hidden="true">⌄</i></button></div>
         <fieldset id="task-weekdays-field" class="form-fieldset hidden">
           <legend>Dias da semana</legend>
           <div id="task-weekdays" class="weekday-picker">
@@ -344,24 +337,29 @@
             <button type="button" data-day="6" aria-pressed="false" aria-label="Sábado">S</button>
           </div>
         </fieldset>
-        <label class="form-field"><span>Encerrar repetição (opcional)</span><input id="task-end-date" type="date"></label>
+        <label class="form-field"><span>Encerrar repetição (opcional)</span><input id="task-end-date" type="hidden"><input id="task-end-date-display" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="DD/MM/AAAA"></label>
         <label class="setting-row form-switch-row">
           <span class="setting-copy"><strong>Notificação</strong><small id="task-notification-help">O Android avisará no horário escolhido</small></span>
           <input id="task-notification" class="switch-input" type="checkbox"><span class="switch" aria-hidden="true"></span>
         </label>
-        <label class="form-field"><span>Antecedência</span><select id="task-reminder">
-          <option value="0">No horário</option><option value="5">5 minutos antes</option><option value="10">10 minutos antes</option>
-          <option value="15">15 minutos antes</option><option value="30">30 minutos antes</option><option value="60">1 hora antes</option>
-        </select></label>
-        <label class="form-field"><span>Abrir no Rosarium</span><select id="task-prayer-target">
-          <option value="none">Nenhuma tela específica</option><option value="terco">Santo Terço</option><option value="rosario">Santo Rosário</option><option value="library">Biblioteca de orações</option>
-        </select></label>
+        <div class="form-field"><span>Antecedência</span><input id="task-reminder" type="hidden" value="0"><button id="task-reminder-picker" class="form-picker-button" data-task-picker="reminder" type="button" aria-haspopup="dialog" aria-controls="option-picker-dialog" aria-expanded="false"><span>No horário</span><i aria-hidden="true">⌄</i></button></div>
+        <div class="form-field"><span>Abrir no Rosarium</span><input id="task-prayer-target" type="hidden" value="none"><button id="task-prayer-target-picker" class="form-picker-button" data-task-picker="prayerTarget" type="button" aria-haspopup="dialog" aria-controls="option-picker-dialog" aria-expanded="false"><span>Nenhuma tela específica</span><i aria-hidden="true">⌄</i></button></div>
         <label class="form-field"><span>Intenção ou observação</span><textarea id="task-notes" rows="3" maxlength="500" placeholder="Opcional"></textarea></label>
         <div class="task-form-actions">
           <button id="btn-delete-task" class="button button-ghost danger-button hidden" type="button">Excluir</button>
           <button class="button button-primary" type="submit">Salvar compromisso</button>
         </div>
       </form>
+    </section>
+  </div>
+
+  <div id="option-picker-dialog" class="dialog-layer hidden" role="presentation">
+    <section class="dialog-sheet dialog-sheet-small" role="dialog" aria-modal="true" aria-labelledby="option-picker-title">
+      <header class="dialog-header">
+        <div><p class="dialog-kicker">Agenda de oração</p><h2 id="option-picker-title">Selecionar opção</h2></div>
+        <button class="icon-button" id="btn-close-option-picker" type="button" aria-label="Fechar seleção">×</button>
+      </header>
+      <div id="option-picker-list" class="option-picker-list" role="radiogroup" aria-labelledby="option-picker-title"></div>
     </section>
   </div>
 

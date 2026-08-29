@@ -64,10 +64,23 @@ $("#btn-new-task").click();
 assert.equal(visible("#task-dialog"), true, "O editor interno de tarefas deve abrir.");
 const now = new Date();
 const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+const todayDisplay = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
 $("#task-title").value = "Rezar o Santo Terço";
-$("#task-date").value = today;
+$("#task-date-display").value = "31/02/2026";
+$("#task-form").dispatchEvent(new window.Event("submit", { bubbles: true, cancelable: true }));
+await settle();
+assert.equal(visible("#task-dialog"), true, "Uma data impossível deve ser recusada no próprio editor.");
+assert.match($("#agenda-toast").textContent, /data válida/i, "A validação deve explicar o erro sem caixa externa.");
+$("#task-date-display").value = todayDisplay;
 $("#task-time").value = "18:00";
-$("#task-prayer-target").value = "terco";
+$("#task-prayer-target-picker").click();
+assert.equal(visible("#option-picker-dialog"), true, "As opções devem abrir em um diálogo interno.");
+assert.equal(visible("#task-dialog"), false, "O editor deve ceder lugar ao seletor interno.");
+[...document.querySelectorAll("#option-picker-list .option-picker-item")]
+  .find((button) => button.textContent.includes("Santo Terço"))
+  .click();
+assert.equal(visible("#task-dialog"), true, "O editor deve retornar após a seleção.");
+assert.equal($("#task-prayer-target").value, "terco", "O seletor interno deve registrar a opção escolhida.");
 $("#task-form").dispatchEvent(new window.Event("submit", { bubbles: true, cancelable: true }));
 await settle();
 await settle();

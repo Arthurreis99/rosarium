@@ -31,7 +31,7 @@ const html = await readFile(resolve(root, "www/index.html"), "utf8");
 for (const reference of ["styles/app.css", "scripts/app.js", "manifest.webmanifest"]) {
   if (!html.includes(reference)) throw new Error(`Referência ausente no HTML: ${reference}`);
 }
-for (const elementId of ["btn-agenda", "screen-agenda", "agenda-tabs", "calendar-grid", "task-dialog", "btn-export-backup", "btn-import-backup"]) {
+for (const elementId of ["btn-agenda", "screen-agenda", "agenda-tabs", "calendar-grid", "task-dialog", "option-picker-dialog", "btn-export-backup", "btn-import-backup"]) {
   if (!html.includes(`id="${elementId}"`)) throw new Error(`Elemento da Agenda ausente: ${elementId}`);
 }
 
