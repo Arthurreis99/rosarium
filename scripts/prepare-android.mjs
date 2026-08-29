@@ -47,8 +47,11 @@ async function configureNativeAgenda() {
     updated = updated.replace(/versionCode \d+/, `versionCode ${versionCode}`);
     updated = updated.replace(/versionName "[^"]+"/, `versionName "${packageData.version}"`);
     if (!updated.includes("coreLibraryDesugaringEnabled")) {
-      updated = updated.replace("    buildTypes {", "    compileOptions {\n        coreLibraryDesugaringEnabled true\n        sourceCompatibility JavaVersion.VERSION_17\n        targetCompatibility JavaVersion.VERSION_17\n    }\n    kotlinOptions {\n        jvmTarget = '17'\n    }\n    buildTypes {");
+      updated = updated.replace("    buildTypes {", "    compileOptions {\n        coreLibraryDesugaringEnabled true\n        sourceCompatibility JavaVersion.VERSION_21\n        targetCompatibility JavaVersion.VERSION_21\n    }\n    kotlinOptions {\n        jvmTarget = '21'\n    }\n    buildTypes {");
     }
+    updated = updated.replace(/sourceCompatibility JavaVersion\.VERSION_\d+/, "sourceCompatibility JavaVersion.VERSION_21");
+    updated = updated.replace(/targetCompatibility JavaVersion\.VERSION_\d+/, "targetCompatibility JavaVersion.VERSION_21");
+    updated = updated.replace(/jvmTarget = '[^']+'/, "jvmTarget = '21'");
     if (!updated.includes("desugar_jdk_libs")) {
       updated = updated.replace("dependencies {", "dependencies {\n    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'");
     }
