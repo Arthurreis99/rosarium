@@ -71,7 +71,16 @@ object AgendaScheduler {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.first.toInstant().toEpochMilli(), pendingIntent)
+        val triggerAt = next.first.toInstant().toEpochMilli()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()) {
+            try {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            } catch (_: SecurityException) {
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            }
+        } else {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+        }
         return true
     }
 
@@ -89,6 +98,12 @@ object AgendaScheduler {
     }
 
     fun requestCode(taskId: String): Int = taskId.hashCode().absoluteValue.coerceAtLeast(1)
+
+    fun exactAlarmStatus(context: Context): String {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return "not_required"
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        return if (alarmManager.canScheduleExactAlarms()) "granted" else "denied"
+    }
 
     private fun nextAlarm(task: JSONObject, after: ZonedDateTime): Pair<ZonedDateTime, LocalDate>? {
         val startDate = parseDate(task.optString("startDate")) ?: return null
