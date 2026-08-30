@@ -4,17 +4,17 @@ function nativePlugin() {
 
 export async function agendaCapabilities() {
   const plugin = nativePlugin();
-  if (!plugin) return { native: false, notifications: "web", filePicker: false };
+  if (!plugin) return { native: false, notifications: "web", exactAlarms: "web", filePicker: false };
   try {
     return await plugin.getCapabilities();
   } catch {
-    return { native: true, notifications: "unknown", filePicker: true };
+    return { native: true, notifications: "unknown", exactAlarms: "unknown", filePicker: true };
   }
 }
 
 export async function syncNativeReminders(tasks, requestPermission = false) {
   const plugin = nativePlugin();
-  if (!plugin) return { native: false, scheduled: 0, permission: "web" };
+  if (!plugin) return { native: false, scheduled: 0, permission: "web", exactAlarms: "web" };
   let permission = "unknown";
   if (requestPermission) {
     try {
@@ -37,9 +37,18 @@ export async function syncNativeReminders(tasks, requestPermission = false) {
     completedDates: Array.isArray(task.completedDates) ? task.completedDates : []
   }));
   try {
-    return await plugin.syncReminders({ tasks: reminders, permission });
+    const result = await plugin.syncReminders({ tasks: reminders, permission });
+    if (requestPermission && result.permission === "granted" && result.exactAlarms === "denied") {
+      try {
+        const exactAccess = await plugin.requestExactAlarmPermission();
+        return { ...result, exactAlarms: exactAccess.exactAlarms || result.exactAlarms };
+      } catch {
+        return { ...result, exactAlarms: "denied" };
+      }
+    }
+    return result;
   } catch (error) {
-    return { native: true, scheduled: 0, permission, error: error?.message || "Falha ao programar notificações." };
+    return { native: true, scheduled: 0, permission, exactAlarms: "unknown", error: error?.message || "Falha ao programar notificações." };
   }
 }
 

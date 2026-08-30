@@ -33,8 +33,9 @@ O código Android mantido no repositório fica em `native/android/`. Durante `an
 1. copia o plugin e os receivers Kotlin;
 2. registra o plugin na `MainActivity`;
 3. adiciona as permissões de notificação e reinicialização;
-4. configura Kotlin e a compatibilidade de datas para aparelhos suportados;
-5. aplica automaticamente a versão definida em `package.json`.
+4. declara o acesso especial a alarmes exatos e restaura os avisos quando ele é concedido;
+5. configura Kotlin e a compatibilidade de datas para aparelhos suportados;
+6. aplica automaticamente a versão definida em `package.json`.
 
 Não edite diretamente a pasta `android/`, pois ela pode ser recriada a qualquer momento.
 

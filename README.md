@@ -20,6 +20,7 @@ Ela usa exatamente os arquivos web que entram no APK, então serve para conferir
 - Biblioteca de orações bilíngue e pesquisável.
 - Agenda de oração com tarefas, lembretes, recorrências e calendário mensal.
 - Notificações Android programadas, restauradas após reiniciar ou alterar o horário do aparelho.
+- Alarmes exatos no Android 12 ou superior mediante o acesso especial “Alarmes e lembretes”, solicitado pelo próprio aplicativo.
 - Abertura da tarefa pela notificação e ação para marcá-la como rezada.
 - Banco local para tarefas e histórico, com exportação e importação de backup JSON.
 - Progresso salvo no dispositivo, navegação por mistérios e por Ave-Marias.

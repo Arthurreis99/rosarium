@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 4.0.1
+
+- Corrige atrasos e falhas aparentes dos lembretes no Android usando alarmes exatos quando autorizados.
+- Solicita o acesso especial “Alarmes e lembretes” exigido pelo Android 12 ou superior.
+- Reprograma os avisos automaticamente depois que o acesso é concedido, além de reinicializações e mudanças de horário.
+- Mantém um alarme inexato como alternativa segura quando o acesso especial não é concedido.
+
 ## 4.0.0
 
 - Nova Agenda de oração com tarefas e lembretes separados.

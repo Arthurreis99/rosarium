@@ -3,8 +3,10 @@ package com.arthurmedeiros.rosarium
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.provider.OpenableColumns
+import android.provider.Settings
 import androidx.activity.result.ActivityResult
 import androidx.core.app.NotificationManagerCompat
 import com.getcapacitor.JSArray
@@ -30,6 +32,7 @@ class RosariumAgendaPlugin : Plugin() {
         result.put("native", true)
         result.put("filePicker", true)
         result.put("notifications", notificationPermission())
+        result.put("exactAlarms", AgendaScheduler.exactAlarmStatus(context))
         call.resolve(result)
     }
 
@@ -60,6 +63,28 @@ class RosariumAgendaPlugin : Plugin() {
     }
 
     @PluginMethod
+    fun requestExactAlarmPermission(call: PluginCall) {
+        val status = AgendaScheduler.exactAlarmStatus(context)
+        if (status != "denied" || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            val result = JSObject()
+            result.put("exactAlarms", status)
+            call.resolve(result)
+            return
+        }
+        try {
+            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                data = Uri.parse("package:${context.packageName}")
+            }
+            activity.startActivity(intent)
+            val result = JSObject()
+            result.put("exactAlarms", "settings")
+            call.resolve(result)
+        } catch (error: Exception) {
+            call.reject("Não foi possível abrir o acesso a alarmes e lembretes.", error)
+        }
+    }
+
+    @PluginMethod
     fun syncReminders(call: PluginCall) {
         val tasks = call.getArray("tasks", JSArray()) ?: JSArray()
         val scheduled = AgendaScheduler.sync(context, tasks)
@@ -67,6 +92,7 @@ class RosariumAgendaPlugin : Plugin() {
         result.put("native", true)
         result.put("scheduled", scheduled)
         result.put("permission", notificationPermission())
+        result.put("exactAlarms", AgendaScheduler.exactAlarmStatus(context))
         call.resolve(result)
     }
 

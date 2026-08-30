@@ -73,15 +73,20 @@ async function configureNativeAgenda() {
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.TIME_SET" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
             </intent-filter>
         </receiver>
     </application>`);
     }
-    if (!updated.includes("android.permission.POST_NOTIFICATIONS")) {
-      updated = updated.replace(
-        "    <uses-permission android:name=\"android.permission.INTERNET\" />",
-        "    <uses-permission android:name=\"android.permission.INTERNET\" />\n    <uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\" />\n    <uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\" />"
-      );
+    const permissions = [
+      "android.permission.POST_NOTIFICATIONS",
+      "android.permission.RECEIVE_BOOT_COMPLETED",
+      "android.permission.SCHEDULE_EXACT_ALARM"
+    ];
+    for (const permission of permissions) {
+      if (!updated.includes(permission)) {
+        updated = updated.replace("    <application", `    <uses-permission android:name="${permission}" />\n\n    <application`);
+      }
     }
     return updated;
   });

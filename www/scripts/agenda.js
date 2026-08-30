@@ -175,7 +175,7 @@ export async function createAgendaController(options) {
   let editingTaskId = null;
   let pendingBackup = null;
   let activePicker = null;
-  let capabilities = { native: false, notifications: "web", filePicker: false };
+  let capabilities = { native: false, notifications: "web", exactAlarms: "web", filePicker: false };
 
   const completionMap = () => new Map(completions.map((item) => [item.id, item]));
 
@@ -541,6 +541,7 @@ export async function createAgendaController(options) {
     await refresh();
     const sync = await syncReminders(task.notificationEnabled);
     if (sync.permission === "denied") showToast("Tarefa salva. Autorize notificações nas configurações do Android.", "warning");
+    else if (sync.exactAlarms === "denied" || sync.exactAlarms === "settings") showToast("Tarefa salva. Autorize “Alarmes e lembretes” para receber o aviso no horário exato.", "warning");
     else showToast(editingTaskId ? "Compromisso atualizado." : "Compromisso criado.", "success");
     editingTaskId = null;
   }
@@ -574,9 +575,13 @@ export async function createAgendaController(options) {
     const nativeStatus = $("#agenda-native-status");
     if (nativeStatus) {
       nativeStatus.textContent = capabilities.native
-        ? result.permission === "denied" ? "Integração Android ativa · notificações não autorizadas" : `Integração Android ativa · ${result.scheduled || 0} lembrete(s) programado(s)`
+        ? result.permission === "denied"
+          ? "Integração Android ativa · notificações não autorizadas"
+          : result.exactAlarms === "denied" || result.exactAlarms === "settings"
+            ? `Integração Android ativa · ${result.scheduled || 0} aviso(s) programado(s) · autorize Alarmes e lembretes para pontualidade`
+            : `Integração Android ativa · ${result.scheduled || 0} aviso(s) programado(s) no horário exato`
         : "Prévia web · notificações disponíveis no aplicativo Android";
-      nativeStatus.dataset.tone = result.permission === "denied" ? "warning" : "";
+      nativeStatus.dataset.tone = result.permission === "denied" || result.exactAlarms === "denied" || result.exactAlarms === "settings" ? "warning" : "";
     }
     return result;
   }
@@ -720,8 +725,11 @@ export async function createAgendaController(options) {
     });
     $("#btn-import-merge").addEventListener("click", () => applyBackup("merge"));
     $("#btn-import-replace").addEventListener("click", () => applyBackup("replace"));
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") consumeNativeActions(true);
+    document.addEventListener("visibilitychange", async () => {
+      if (document.visibilityState === "visible") {
+        await syncReminders(false);
+        await consumeNativeActions(true);
+      }
     });
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && activePicker) closeOptionPicker();
