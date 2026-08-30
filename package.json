@@ -1,6 +1,6 @@
 {
   "name": "rosarium",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Aplicativo católico tradicional para rezar o Santo Terço e o Santo Rosário em português e latim.",
   "private": true,
   "type": "module",
