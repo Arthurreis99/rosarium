@@ -1,4 +1,4 @@
-const CACHE = "rosarium-v4.0.0-r2";
+const CACHE = "rosarium-v4.0.1-r1";
 const APP_SHELL = [
   "./", "./index.html", "./styles/app.css", "./scripts/app.js", "./scripts/data.js", "./scripts/agenda.js",
   "./scripts/agenda-store.js", "./scripts/agenda-native.js", "./manifest.webmanifest",
