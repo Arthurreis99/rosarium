@@ -50,8 +50,13 @@ for (const moduleName of ["agenda.js", "agenda-store.js", "agenda-native.js"]) {
 }
 
 const nativeScheduler = await readFile(resolve(root, "native/android/java/com/arthurmedeiros/rosarium/AgendaScheduler.kt"), "utf8");
-if (!nativeScheduler.includes("setAndAllowWhileIdle") || !nativeScheduler.includes("rescheduleAll")) {
+if (!nativeScheduler.includes("setExactAndAllowWhileIdle") || !nativeScheduler.includes("canScheduleExactAlarms") || !nativeScheduler.includes("rescheduleAll")) {
   throw new Error("A integração Android não programa ou restaura corretamente os lembretes.");
+}
+
+const androidPreparation = await readFile(resolve(root, "scripts/prepare-android.mjs"), "utf8");
+for (const requirement of ["android.permission.SCHEDULE_EXACT_ALARM", "SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED"]) {
+  if (!androidPreparation.includes(requirement)) throw new Error(`Integração Android incompleta: ${requirement}`);
 }
 
 const mark = await sharp(resolve(root, "www/assets/brand/rosarium-mark.png"))
